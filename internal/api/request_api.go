@@ -12,7 +12,7 @@ type API struct {
 }
 
 // NewAPI creates a new API instance.
-func NewAPI(requestService *services.RequestService) *API {
+func NewRequestAPI(requestService *services.RequestService) *API {
     return &API{RequestService: requestService}
 }
 
