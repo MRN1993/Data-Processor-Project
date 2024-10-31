@@ -1,87 +1,69 @@
 package services
 
 import (
-	"errors"
-	"fmt"
-	"time"
-	"data-processor-project/internal/domain/models"
-	"data-processor-project/internal/generator" 
+    "fmt"
+    "time"
+    "data-processor-project/internal/domain/models"
+    "data-processor-project/internal/generator"
+    "data-processor-project/internal/domain/logic" // Importing the logic package
+    "go.uber.org/zap"
 )
-
 
 // RequestService provides functionality to manage requests.
 type RequestService struct {
-	users map[string]*models.User 
-	requests map[string]models.Request 
+    requests map[string]models.Request // Store requests
+    users    map[string]models.User     // Store users
+    logger   *zap.Logger                // Logger for RequestService
 }
 
 // NewRequestService creates a new RequestService.
-func NewRequestService() *RequestService {
-	return &RequestService{
-		users:    make(map[string]*models.User),
-		requests: make(map[string]models.Request),
-	}
-}
+func NewRequestService(logger *zap.Logger) *RequestService {
+    // Initialize users with example data
+    users := map[string]models.User{
+        "user1": {ID: "user1", Quota: 5}, // Example user with a quota of 5 requests
+        // You can add more users here
+    }
 
-// ValidateRequest validates the incoming request data.
-func (s *RequestService) ValidateRequest(userID string, data string) error {
-	if userID == "" || data == "" {
-		return errors.New("userID and data cannot be empty")
-	}
-	return nil
-}
-
-// CheckDuplicate checks if the request is a duplicate.
-func (s *RequestService) CheckDuplicate(userID string, data string) bool {
-	for _, req := range s.requests {
-		if req.UserID == userID && req.Data == data {
-			return true
-		}
-	}
-	return false
-}
-
-// CheckUserQuota checks if the user has exceeded their request quota.
-func (s *RequestService) CheckUserQuota(userID string) bool {
-	quota := s.users[userID].Quota
-	count := 0
-	for _, req := range s.requests {
-		if req.UserID == userID {
-			count++
-		}
-	}
-	return count < quota
+    return &RequestService{
+        requests: make(map[string]models.Request),
+        users:    users,
+        logger:   logger,
+    }
 }
 
 // HandleRequest processes a new request.
 func (s *RequestService) HandleRequest(userID string, data string) error {
-	// 1. Validate the request
-	if err := s.ValidateRequest(userID, data); err != nil {
-		return err
-	}
+    // 1. Validate the request
+    if err := logic.ValidateRequest(userID, data); err != nil {
+        s.logger.Warn("Request validation failed", zap.String("userID", userID), zap.String("data", data), zap.Error(err))
+        return err
+    }
 
-	// 2. Check for duplicates
-	if s.CheckDuplicate(userID, data) {
-		return errors.New("duplicate request detected")
-	}
+    // 2. Check for duplicates
+    if logic.CheckDuplicate(s.requests, userID, data) {
+        s.logger.Warn("Duplicate request detected", zap.String("userID", userID), zap.String("data", data))
+        return fmt.Errorf("duplicate request detected")
+    }
 
-	// 3. Check user quota
-	if !s.CheckUserQuota(userID) {
-		return errors.New("user has exceeded request quota")
-	}
+    // 3. Check user quota
+    if err := logic.CheckUserQuota(s.users, s.requests, userID); err != nil {
+        s.logger.Warn("User quota check failed", zap.String("userID", userID), zap.Error(err))
+        return err
+    }
 
-	// 4. Create the request
-	request := models.Request{
-		ID:         generator.GenerateUUID(), // Use the UUID generator
-		UserID:     userID,
-		Data:       data,
-		ReceivedAt: time.Now(),
-	}
+    // 4. Create the request
+    request := models.Request{
+        ID:         generator.GenerateUUID(),
+        UserID:     userID,
+        Data:       data,
+        ReceivedAt: time.Now(),
+    }
 
-	// Store the request in memory
-	s.requests[request.ID] = request
+    // Store the request in memory
+    s.requests[request.ID] = request
 
-	// Publish the appropriate event here (not shown)
-	fmt.Println("Processing request:", request)
-	return nil
+    // Log the request processing
+    s.logger.Info("Processing request", zap.String("requestID", request.ID), zap.String("userID", userID), zap.String("data", data))
+
+    return nil
 }
