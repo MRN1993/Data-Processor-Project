@@ -8,12 +8,17 @@ import (
     "data-processor-project/internal/api"
     "data-processor-project/internal/repository"
     "data-processor-project/internal/domain/services"
+    "data-processor-project/internal/logs"
 
     _ "github.com/mattn/go-sqlite3"
-    "go.uber.org/zap"
 )
 
 func main() {
+
+    // Initialize logger
+    logs.InitLogger()
+    defer logs.Sync() 
+
     db, err := sql.Open("sqlite3", "data_processor.db")
     if err != nil {
         log.Fatalf("Failed to connect to database: %v", err)
@@ -22,15 +27,11 @@ func main() {
 
     repository.Migrate(db)
 
-    // تنظیم logger
-    logger, _ := zap.NewProduction()
-    defer logger.Sync()
-
     userService := services.NewUserService(db)
 
     // ایجاد RequestRepository و RequestService
     requestRepo := repository.NewSQLRequestRepository(db)
-    requestService := services.NewRequestService(requestRepo, logger)
+    requestService := services.NewRequestService(requestRepo, logs.Logger)
 
     // ایجاد APIها
     userAPI := api.NewUserAPI(userService)
