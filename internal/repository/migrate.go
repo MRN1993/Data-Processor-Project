@@ -2,24 +2,23 @@ package repository
 
 import (
     "database/sql"
-    "log"
+    "go.uber.org/zap"
+    "data-processor-project/internal/logs"
 )
 
-// Migrate creates necessary tables if they do not exist
 func Migrate(db *sql.DB) {
 
     userTable := `
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        quota INTEGER,
-        monthly_data_limit INTEGER,    -- محدودیت حجم داده در ماه
-        request_limit_per_minute INTEGER, -- محدودیت تعداد درخواست در دقیقه
-        used_data INTEGER DEFAULT 0,  -- میزان داده‌ی استفاده شده ماهانه
-        request_count INTEGER DEFAULT 0, -- تعداد درخواست‌ها در دقیقه فعلی
-        last_request_time DATETIME    -- زمان آخرین درخواست
+        quota INTEGER NOT NULL,
+        monthly_data_limit INTEGER,   
+        request_limit_per_minute INTEGER,
+        used_data INTEGER DEFAULT 0,  
+        request_count INTEGER DEFAULT 0, 
+        last_request_time DATETIME   
     );`
 
-    
     requestTable := `
     CREATE TABLE IF NOT EXISTS requests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,12 +28,20 @@ func Migrate(db *sql.DB) {
         FOREIGN KEY(user_id) REFERENCES users(id)
     );`
 
+    logs.Logger.Info("Starting migration of tables...")
 
     if _, err := db.Exec(userTable); err != nil {
-        log.Fatalf("Failed to create users table: %v", err)
+        logs.Logger.Fatal("Failed to create users table", zap.Error(err))
+    } else {
+        logs.Logger.Info("Users table created or already exists")
     }
 
     if _, err := db.Exec(requestTable); err != nil {
-        log.Fatalf("Failed to create requests table: %v", err)
+        logs.Logger.Fatal("Failed to create requests table", zap.Error(err))
+    } else {
+        logs.Logger.Info("Requests table created or already exists")
     }
+
+    logs.Logger.Info("Migration completed successfully")
 }
+
