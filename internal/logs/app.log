@@ -1,4 +1,0 @@
-{"level":"info","ts":"2024-11-02T13:11:01.953+0330","caller":"repository/migrate.go:31","msg":"Starting migration of tables..."}
-{"level":"info","ts":"2024-11-02T13:11:01.953+0330","caller":"repository/migrate.go:36","msg":"Users table created or already exists"}
-{"level":"info","ts":"2024-11-02T13:11:01.953+0330","caller":"repository/migrate.go:42","msg":"Requests table created or already exists"}
-{"level":"info","ts":"2024-11-02T13:11:01.953+0330","caller":"repository/migrate.go:45","msg":"Migration completed successfully"}
