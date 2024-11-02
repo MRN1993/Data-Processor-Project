@@ -17,10 +17,10 @@ func NewUserService(db *sql.DB) *UserService {
 }
 
 // RegisterUser registers a new user in the database.
-func (us *UserService) RegisterUser(quota, monthlyDataLimit, requestLimitPerMinute int) error {
-    logs.Logger.Info("Registering new user", zap.Int("quota", quota))
+func (us *UserService) RegisterUser(monthlyDataLimit, requestLimitPerMinute int) error {
+    logs.Logger.Info("Registering new user")
 
-    err := logic.RegisterUserInDB(us.db, quota, monthlyDataLimit, requestLimitPerMinute)
+    err := logic.RegisterUserInDB(us.db, monthlyDataLimit, requestLimitPerMinute)
     if err != nil {
         logs.Logger.Error("Failed to register user", zap.Error(err))
         return err

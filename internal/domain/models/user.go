@@ -4,7 +4,6 @@ import "time"
 
 type User struct {
 	ID     int 
-	Quota  int  
 	monthly_data_limit int
 	request_limit_per_minute int
 	used_data  int

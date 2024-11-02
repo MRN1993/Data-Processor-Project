@@ -2,7 +2,6 @@ package logic
 
 import (
 	"context"
-	"data-processor-project/internal/domain/models"
 	"data-processor-project/internal/logs"
 	"database/sql"
 	"errors"
@@ -80,27 +79,17 @@ func CheckDuplicate(db *sql.DB, userID int, data string) (bool, error) {
 func CheckUserQuota(db *sql.DB, userID int) error {
     logs.Logger.Info("Checking user quota", zap.Int("userID", userID))
 
-    var user models.User // Assuming you have a User struct
     query := `SELECT quota FROM users WHERE id = ?`
-    err := db.QueryRow(query, userID).Scan(&user.Quota)
-    if err != nil {
-        logs.Logger.Error("Failed to retrieve user quota", zap.Error(err))
-        return err
-    }
 
     var requestCount int
     query = `SELECT COUNT(*) FROM requests WHERE user_id = ?`
-    err = db.QueryRow(query, userID).Scan(&requestCount)
+    err := db.QueryRow(query, userID).Scan(&requestCount)
     if err != nil {
         logs.Logger.Error("Failed to count user requests", zap.Error(err))
         return err
     }
 
-    if requestCount >= user.Quota {
-        logs.Logger.Warn("User has exceeded request quota", zap.Int("userID", userID), zap.Int("requestCount", requestCount), zap.Int("quota", user.Quota))
-        return errors.New("user has exceeded request quota")
-    }
 
-    logs.Logger.Info("User quota check passed", zap.Int("userID", userID), zap.Int("requestCount", requestCount), zap.Int("quota", user.Quota))
+    logs.Logger.Info("User quota check passed", zap.Int("userID", userID), zap.Int("requestCount", requestCount))
     return nil
 }

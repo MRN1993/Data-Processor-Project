@@ -23,7 +23,6 @@ func (api *UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 
     var user struct {
-        Quota                 int `json:"quota"`
         MonthlyDataLimit      int `json:"monthly_data_limit"`
         RequestLimitPerMinute int `json:"request_limit_per_minute"`
     }
@@ -35,7 +34,7 @@ func (api *UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
     }
 
 
-    if err := api.service.RegisterUser(user.Quota, user.MonthlyDataLimit, user.RequestLimitPerMinute); err != nil {
+    if err := api.service.RegisterUser(user.MonthlyDataLimit, user.RequestLimitPerMinute); err != nil {
         http.Error(w, "Failed to register user", http.StatusInternalServerError)
         return
     }

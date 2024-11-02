@@ -12,8 +12,8 @@ func Migrate(db *sql.DB) {
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         quota INTEGER NOT NULL,
-        monthly_data_limit INTEGER,   
-        request_limit_per_minute INTEGER,
+        monthly_data_limit INTEGER NOT NULL,   
+        request_limit_per_minute INTEGER NOT NULL,
         used_data INTEGER DEFAULT 0,  
         request_count INTEGER DEFAULT 0, 
         last_request_time DATETIME   
@@ -22,8 +22,8 @@ func Migrate(db *sql.DB) {
     requestTable := `
     CREATE TABLE IF NOT EXISTS requests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        data STRING,
+        user_id INTEGER NOT NULL,
+        data STRING NOT NULL,
         received_at DATETIME,
         FOREIGN KEY(user_id) REFERENCES users(id)
     );`

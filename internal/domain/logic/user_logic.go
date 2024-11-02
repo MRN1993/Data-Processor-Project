@@ -18,12 +18,12 @@ type UserLimits struct {
 }
 
 
-func RegisterUserInDB(db *sql.DB, quota, monthlyDataLimit, requestLimitPerMinute int) error {
+func RegisterUserInDB(db *sql.DB, monthlyDataLimit, requestLimitPerMinute int) error {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
 
-    query := `INSERT INTO users (quota, monthly_data_limit, request_limit_per_minute, used_data, request_count, last_request_time) VALUES (?, ?, ?, 0, 0, ?)`
-    _, err := db.ExecContext(ctx, query, quota, monthlyDataLimit, requestLimitPerMinute, time.Now())
+    query := `INSERT INTO users (monthly_data_limit, request_limit_per_minute, used_data, request_count, last_request_time) VALUES (?, ?, 0, 0, ?)`
+    _, err := db.ExecContext(ctx, query, monthlyDataLimit, requestLimitPerMinute, time.Now())
     return err
 }
 
