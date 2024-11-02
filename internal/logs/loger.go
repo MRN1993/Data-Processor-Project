@@ -11,7 +11,7 @@ var Logger *zap.Logger
 func InitLogger() {
     config := zap.NewProductionConfig()
     config.OutputPaths = []string{
-        "logs/app.log", 
+        "internal/logs/app.log", 
         "stdout",      
     }
 
