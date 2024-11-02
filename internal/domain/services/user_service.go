@@ -20,20 +20,20 @@ func NewUserService(db *sql.DB) *UserService {
 }
 
 // متد RegisterUser برای ثبت یک کاربر جدید
-func (us *UserService) RegisterUser(userID int, quota int) error {
+func (us *UserService) RegisterUser(quota int, monthlydatalimit int,requestlimitperminute int) error {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
 
-    logs.Logger.Info("Attempting to register user", zap.Int("userID", userID), zap.Int("quota", quota))
+    logs.Logger.Info("Attempting to register user", zap.Int("quota", quota))
 
-    query := `INSERT INTO users (id, request_limit_per_minute, monthly_data_limit, used_data, request_count, last_request_time) VALUES (?, ?, ?, ?, ?, ?)`
-    _, err := us.db.ExecContext(ctx, query, userID, quota, 0, 0, 0, time.Now())
+    query := `INSERT INTO users (quota, monthly_data_limit, request_limit_per_minute, used_data, request_count, last_request_time) VALUES (?, ?, ?, 0, 0, ?)`
+    _, err := us.db.ExecContext(ctx, query, quota, monthlydatalimit, requestlimitperminute, 0, 0, time.Now())
     if err != nil {
-        logs.Logger.Error("Failed to register user", zap.Error(err), zap.Int("userID", userID))
+        logs.Logger.Error("Failed to register user", zap.Error(err))
         return errors.New("failed to register user: " + err.Error())
     }
 
-    logs.Logger.Info("User registered successfully", zap.Int("userID", userID))
+    logs.Logger.Info("User registered successfully")
     return nil
 }
 
