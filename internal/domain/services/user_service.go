@@ -16,7 +16,7 @@ func NewUserService(db *sql.DB) *UserService {
     return &UserService{db: db}
 }
 
-// متد RegisterUser برای ثبت یک کاربر جدید
+
 func (us *UserService) RegisterUser(quota int, monthlyDataLimit int, requestLimitPerMinute int) error {
     logs.Logger.Info("Attempting to register user", zap.Int("quota", quota))
 
@@ -29,7 +29,6 @@ func (us *UserService) RegisterUser(quota int, monthlyDataLimit int, requestLimi
     return nil
 }
 
-// متد CheckQuota برای بررسی محدودیت‌های کاربر
 func (us *UserService) CheckQuota(userID int, dataSize int) error {
     logs.Logger.Info("Checking user quota", zap.Int("userID", userID), zap.Int("dataSize", dataSize))
 
