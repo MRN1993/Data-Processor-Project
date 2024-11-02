@@ -2,6 +2,7 @@ package services
 
 import (
     "data-processor-project/internal/domain/models"
+    "data-processor-project/internal/logs"
     "go.uber.org/zap"
 )
 
@@ -12,14 +13,13 @@ type RequestRepository interface {
 
 type RequestService struct {
     repo   RequestRepository
-    logger *zap.Logger
 }
 
-func NewRequestService(repo RequestRepository, logger *zap.Logger) *RequestService {
-    return &RequestService{repo: repo, logger: logger}
+func NewRequestService(repo RequestRepository) *RequestService {
+    return &RequestService{repo: repo}
 }
 
 func (s *RequestService) ProcessRequest(request models.Request) error {
-    s.logger.Info("Processing request", zap.String("ID", request.ID))
+    logs.Logger.Info("Processing request", zap.String("ID", request.ID))
     return s.repo.AddRequest(request)
 }

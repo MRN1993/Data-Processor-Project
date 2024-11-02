@@ -31,7 +31,7 @@ func main() {
 
     // ایجاد RequestRepository و RequestService
     requestRepo := repository.NewSQLRequestRepository(db)
-    requestService := services.NewRequestService(requestRepo, logs.Logger)
+    requestService := services.NewRequestService(requestRepo)
 
     // ایجاد APIها
     userAPI := api.NewUserAPI(userService)
