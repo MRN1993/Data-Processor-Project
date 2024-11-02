@@ -2,26 +2,27 @@ package repository
 
 import (
     "database/sql"
-    "time"
     "data-processor-project/internal/domain/models"
+    "time"
 )
 
-type RequestRepository struct {
+type SQLRequestRepository struct {
     db *sql.DB
 }
 
-func NewRequestRepository(db *sql.DB) *RequestRepository {
-    return &RequestRepository{db: db}
+func NewSQLRequestRepository(db *sql.DB) *SQLRequestRepository {
+    return &SQLRequestRepository{db: db}
 }
 
-func (repo *RequestRepository) AddRequest(request models.Request) error {
-    _, err := repo.db.Exec("INSERT INTO requests (id, user_id, data, received_at) VALUES (?, ?, ?, ?)",
-        request.ID, request.UserID, request.Data, request.ReceivedAt.Format(time.RFC3339))
+func (r *SQLRequestRepository) AddRequest(request models.Request) error {
+    query := `INSERT INTO requests (id, user_id, data, received_at) VALUES (?, ?, ?, ?)`
+    _, err := r.db.Exec(query, request.ID, request.UserID, request.Data, time.Now())
     return err
 }
 
-func (repo *RequestRepository) GetRequestsByUserID(userID string) ([]models.Request, error) {
-    rows, err := repo.db.Query("SELECT id, user_id, data, received_at FROM requests WHERE user_id = ?", userID)
+func (r *SQLRequestRepository) GetRequestsByUserID(userID int) ([]models.Request, error) {
+    query := `SELECT id, user_id, data, received_at FROM requests WHERE user_id = ?`
+    rows, err := r.db.Query(query, userID)
     if err != nil {
         return nil, err
     }
@@ -30,11 +31,9 @@ func (repo *RequestRepository) GetRequestsByUserID(userID string) ([]models.Requ
     var requests []models.Request
     for rows.Next() {
         var request models.Request
-        var receivedAt string
-        if err := rows.Scan(&request.ID, &request.UserID, &request.Data, &receivedAt); err != nil {
+        if err := rows.Scan(&request.ID, &request.UserID, &request.Data, &request.ReceivedAt); err != nil {
             return nil, err
         }
-        request.ReceivedAt, _ = time.Parse(time.RFC3339, receivedAt)
         requests = append(requests, request)
     }
     return requests, nil

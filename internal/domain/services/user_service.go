@@ -1,45 +1,74 @@
 package services
 
 import (
-    "errors"
-    "data-processor-project/internal/domain/models"
-    "data-processor-project/internal/generator"
+	"context"
+	"database/sql"
+	"errors"
+	"time"
 )
 
-// UserService manages users in the system.
 type UserService struct {
-    users map[string]models.User // Store users
+    db *sql.DB
 }
 
-// NewUserService creates a new UserService.
-func NewUserService() *UserService {
-    return &UserService{
-        users: make(map[string]models.User),
-    }
+func NewUserService(db *sql.DB) *UserService {
+    return &UserService{db: db}
 }
 
-// CreateUser creates a new user with a specified quota.
-func (s *UserService) CreateUser(quota int) (models.User, error) {
-    if quota <= 0 {
-        return models.User{}, errors.New("quota must be greater than zero")
-    }
 
-    userID := generator.GenerateUUID()
-    user := models.User{
-        ID:    userID,
-        Quota: quota,
-    }
+// RegisterUser برای ثبت کاربر جدید
+func (us *UserService) RegisterUser(userID int, quota int) error {
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
 
-    // Store the user
-    s.users[userID] = user
-    return user, nil
+    query := `INSERT INTO users (id, request_limit_per_minute, monthly_data_limit, used_data, request_count, last_request_time) VALUES (?, ?, ?, ?, ?, ?)`
+    _, err := us.db.ExecContext(ctx, query, userID, quota, 0, 0, 0, time.Now())
+    if err != nil {
+        return errors.New("failed to register user: " + err.Error())
+    }
+    return nil
 }
 
-// GetUser retrieves a user by ID.
-func (s *UserService) GetUser(userID string) (models.User, error) {
-    user, exists := s.users[userID]
-    if !exists {
-        return models.User{}, errors.New("user does not exist")
+
+// CheckQuota بررسی محدودیت‌های کاربر
+func (us *UserService) CheckQuota(userID int, dataSize int) error {
+    var (
+        requestLimitPerMinute, monthlyDataLimit, usedData, requestCount int
+        lastRequestTime time.Time
+    )
+
+    query := `SELECT request_limit_per_minute, monthly_data_limit, used_data, request_count, last_request_time FROM users WHERE id = ?`
+    row := us.db.QueryRow(query, userID)
+    err := row.Scan(&requestLimitPerMinute, &monthlyDataLimit, &usedData, &requestCount, &lastRequestTime)
+    if err != nil {
+        return err
     }
-    return user, nil
+
+    // بررسی محدودیت حجم داده ماهانه
+    if usedData+dataSize > monthlyDataLimit {
+        return errors.New("user has exceeded monthly data limit")
+    }
+
+    // بررسی محدودیت تعداد درخواست در دقیقه
+    now := time.Now()
+    if now.Sub(lastRequestTime) < time.Minute {
+        if requestCount+1 > requestLimitPerMinute {
+            return errors.New("user has exceeded request limit per minute")
+        }
+        requestCount++
+    } else {
+        // ریست کردن تعداد درخواست‌ها در دقیقه اگر بیش از یک دقیقه گذشته باشد
+        requestCount = 1
+    }
+
+    // بروزرسانی داده‌های کاربر
+    updateQuery := `UPDATE users SET used_data = ?, request_count = ?, last_request_time = ? WHERE id = ?`
+    _, err = us.db.Exec(updateQuery, usedData+dataSize, requestCount, now, userID)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
+
+

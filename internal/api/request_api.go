@@ -3,38 +3,30 @@ package api
 import (
     "encoding/json"
     "net/http"
+    "data-processor-project/internal/domain/models"
     "data-processor-project/internal/domain/services"
 )
 
-// API represents the HTTP API.
-type API struct {
-    RequestService *services.RequestService
+type RequestAPI struct {
+    service *services.RequestService
 }
 
-// NewAPI creates a new API instance.
-func NewRequestAPI(requestService *services.RequestService) *API {
-    return &API{RequestService: requestService}
+func NewRequestAPI(service *services.RequestService) *RequestAPI {
+    return &RequestAPI{service: service}
 }
 
-// HandleRequest handles incoming requests.
-func (api *API) HandleRequest(w http.ResponseWriter, r *http.Request) {
-    var req struct {
-        UserID string `json:"user_id"`
-        Data   string `json:"data"`
-    }
-
-    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+func (api *RequestAPI) HandleRequest(w http.ResponseWriter, r *http.Request) {
+    var request models.Request
+    if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        http.Error(w, "Invalid request payload", http.StatusBadRequest)
         return
     }
 
-    // Call the HandleRequest method to process the request
-    if err := api.RequestService.HandleRequest(req.UserID, req.Data); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+    if err := api.service.ProcessRequest(request); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
 
-    w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode("Request processed successfully")
+    w.WriteHeader(http.StatusCreated)
+    w.Write([]byte("Request processed successfully"))
 }
-

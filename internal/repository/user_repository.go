@@ -18,7 +18,7 @@ func (repo *UserRepository) AddUser(user models.User) error {
     return err
 }
 
-func (repo *UserRepository) GetUser(userID string) (models.User, error) {
+func (repo *UserRepository) GetUser(userID int) (models.User, error) {
     var user models.User
     row := repo.db.QueryRow("SELECT id, quota FROM users WHERE id = ?", userID)
     err := row.Scan(&user.ID, &user.Quota)
