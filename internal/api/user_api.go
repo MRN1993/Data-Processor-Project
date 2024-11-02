@@ -23,8 +23,8 @@ func (api *UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 
     var user struct {
-        Quota                int `json:"quota"`
-        MonthlyDataLimit     int `json:"monthly_data_limit"`
+        Quota                 int `json:"quota"`
+        MonthlyDataLimit      int `json:"monthly_data_limit"`
         RequestLimitPerMinute int `json:"request_limit_per_minute"`
     }
 

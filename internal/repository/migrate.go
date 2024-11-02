@@ -23,7 +23,7 @@ func Migrate(db *sql.DB) {
     CREATE TABLE IF NOT EXISTS requests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
-        data TEXT,
+        data STRING,
         received_at DATETIME,
         FOREIGN KEY(user_id) REFERENCES users(id)
     );`

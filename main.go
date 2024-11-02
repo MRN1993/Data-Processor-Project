@@ -28,17 +28,14 @@ func main() {
     repository.Migrate(db)
 
     userService := services.NewUserService(db)
+    requestService := services.NewRequestService(db)
 
-    // ایجاد RequestRepository و RequestService
-    requestRepo := repository.NewSQLRequestRepository(db)
-    requestService := services.NewRequestService(requestRepo)
 
-    // ایجاد APIها
     userAPI := api.NewUserAPI(userService)
     requestAPI := api.NewRequestAPI(requestService)
 
     http.HandleFunc("/users", userAPI.CreateUser)
-    http.HandleFunc("/requests", requestAPI.HandleRequest)
+    http.HandleFunc("/requests", requestAPI.AddRequest)
 
     log.Println("Server started at :8080")
     http.ListenAndServe(":8080", nil)

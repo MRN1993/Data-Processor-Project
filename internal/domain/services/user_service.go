@@ -1,11 +1,11 @@
 package services
 
 import (
-    "errors"
-    "database/sql"
-    "data-processor-project/internal/logs"
-    "go.uber.org/zap"
     "data-processor-project/internal/domain/logic"
+    "data-processor-project/internal/logs"
+    "database/sql"
+
+    "go.uber.org/zap"
 )
 
 type UserService struct {
@@ -16,27 +16,17 @@ func NewUserService(db *sql.DB) *UserService {
     return &UserService{db: db}
 }
 
+// RegisterUser registers a new user in the database.
+func (us *UserService) RegisterUser(quota, monthlyDataLimit, requestLimitPerMinute int) error {
+    logs.Logger.Info("Registering new user", zap.Int("quota", quota))
 
-func (us *UserService) RegisterUser(quota int, monthlyDataLimit int, requestLimitPerMinute int) error {
-    logs.Logger.Info("Attempting to register user", zap.Int("quota", quota))
-
-    if err := logic.RegisterUserInDB(us.db, quota, monthlyDataLimit, requestLimitPerMinute); err != nil {
+    err := logic.RegisterUserInDB(us.db, quota, monthlyDataLimit, requestLimitPerMinute)
+    if err != nil {
         logs.Logger.Error("Failed to register user", zap.Error(err))
-        return errors.New("failed to register user: " + err.Error())
+        return err
     }
 
     logs.Logger.Info("User registered successfully")
     return nil
 }
 
-func (us *UserService) CheckQuota(userID int, dataSize int) error {
-    logs.Logger.Info("Checking user quota", zap.Int("userID", userID), zap.Int("dataSize", dataSize))
-
-    if err := logic.CheckUserLimits(us.db, userID, dataSize); err != nil {
-        logs.Logger.Warn("Quota check failed", zap.Error(err))
-        return err
-    }
-
-    logs.Logger.Info("User quota check passed", zap.Int("userID", userID))
-    return nil
-}

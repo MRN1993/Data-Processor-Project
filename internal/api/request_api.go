@@ -3,7 +3,6 @@ package api
 import (
     "encoding/json"
     "net/http"
-    "data-processor-project/internal/domain/models"
     "data-processor-project/internal/domain/services"
 )
 
@@ -15,14 +14,19 @@ func NewRequestAPI(service *services.RequestService) *RequestAPI {
     return &RequestAPI{service: service}
 }
 
-func (api *RequestAPI) HandleRequest(w http.ResponseWriter, r *http.Request) {
-    var request models.Request
+func (api *RequestAPI) AddRequest(w http.ResponseWriter, r *http.Request) {
+    
+    var request struct {
+        UserID   int    `json:"user_id"`
+        Data     string `json:"data"`
+    }
+
     if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
         http.Error(w, "Invalid request payload", http.StatusBadRequest)
         return
     }
 
-    if err := api.service.ProcessRequest(request); err != nil {
+    if err := api.service.ProcessRequest(request.UserID,request.Data); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }

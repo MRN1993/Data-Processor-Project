@@ -48,7 +48,7 @@ func CheckUserLimits(db *sql.DB, userID, dataSize int) error {
     return UpdateUserQuota(db, userID, dataSize, user)
 }
 
-// متد RetrieveUserLimits برای بازیابی محدودیت‌های کاربر
+
 func RetrieveUserLimits(db *sql.DB, userID int) (UserLimits, error) {
     var user UserLimits
     query := `SELECT request_limit_per_minute, monthly_data_limit, used_data, request_count, last_request_time FROM users WHERE id = ?`
@@ -73,7 +73,7 @@ func UpdateUserQuota(db *sql.DB, userID, dataSize int, user UserLimits) error {
     newRequestCount := user.RequestCount + 1
 
     if now.Sub(user.LastRequestTime) >= time.Minute {
-        newRequestCount = 1
+        newRequestCount = 0
     }
 
     query := `UPDATE users SET used_data = ?, request_count = ?, last_request_time = ? WHERE id = ?`
