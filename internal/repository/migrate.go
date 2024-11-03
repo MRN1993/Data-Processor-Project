@@ -11,7 +11,6 @@ func Migrate(db *sql.DB) {
     userTable := `
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        quota INTEGER NOT NULL,
         monthly_data_limit INTEGER NOT NULL,   
         request_limit_per_minute INTEGER NOT NULL,
         used_data INTEGER DEFAULT 0,  
