@@ -35,17 +35,18 @@ func CheckUserLimits(db *sql.DB, userID, dataSize int) error {
         return err
     }
 
-    if user.UsedData+dataSize > user.MonthlyDataLimit {
+    if user.UsedData > user.MonthlyDataLimit {
         logs.Logger.Warn("User exceeded monthly data limit", zap.Int("userID", userID), zap.Int("usedData", user.UsedData), zap.Int("dataSize", dataSize))
         return errors.New("user has exceeded monthly data limit")
     }
 
+    
     if !CheckRequestLimit(user) {
         logs.Logger.Warn("User exceeded request limit per minute", zap.Int("userID", userID), zap.Int("requestCount", user.RequestCount))
         return errors.New("user has exceeded request limit per minute")
     }
 
-    return UpdateUserQuota(db, userID, dataSize, user)
+    return err
 }
 
 
@@ -73,7 +74,7 @@ func UpdateUserQuota(db *sql.DB, userID, dataSize int, user UserLimits) error {
     newRequestCount := user.RequestCount + 1
 
     if now.Sub(user.LastRequestTime) >= time.Minute {
-        newRequestCount = 0
+        newRequestCount = 1
     }
 
     query := `UPDATE users SET used_data = ?, request_count = ?, last_request_time = ? WHERE id = ?`
