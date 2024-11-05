@@ -10,15 +10,19 @@ import (
 	"go.uber.org/zap"
 )
 
-// AddRequest adds a new request to the database.
-func RegisterRequest(db *sql.DB, UserID int,Data string) error {
-    logs.Logger.Info("Adding new request", zap.Int("userID", UserID), zap.String("data", Data))
+type RequestUpdateTime struct {
+    UpdatedAt time.Time
+}
+
+// RegisterRequest adds a new request to the database.
+func RegisterRequest(db *sql.DB, requestID int, userID int, data string) error {
+    logs.Logger.Info("Adding new request", zap.Int("requestID", requestID), zap.Int("userID", userID), zap.String("data", data))
 
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
-    
-    query := `INSERT INTO requests (user_id, data,received_at) VALUES (?, ?, ?)`
-    _, err := db.ExecContext(ctx, query, UserID, Data, time.Now())
+
+    query := `INSERT INTO requests (request_id, user_id, data, received_at, updated_at) VALUES (?, ?, ?, ?, ?)`
+    _, err := db.ExecContext(ctx, query, requestID, userID, data, time.Now(), time.Now())
     if err != nil {
         logs.Logger.Error("Failed to add request", zap.Error(err))
         return err
@@ -29,7 +33,7 @@ func RegisterRequest(db *sql.DB, UserID int,Data string) error {
 }
 
 // ValidateRequest validates the incoming request data.
-func ValidateRequest(db *sql.DB, userID int, data string) error {
+func ValidateRequest(db *sql.DB, requestID int, userID int, data string) error {
     logs.Logger.Info("Validating request data", zap.Int("userID", userID), zap.String("data", data))
 
     if data == "" {
@@ -37,6 +41,7 @@ func ValidateRequest(db *sql.DB, userID int, data string) error {
         return errors.New("data cannot be empty")
     }
 
+    // Check if user exists
     var exists bool
     query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = ?)`
     err := db.QueryRow(query, userID).Scan(&exists)
@@ -52,44 +57,6 @@ func ValidateRequest(db *sql.DB, userID int, data string) error {
 
     logs.Logger.Info("Request data validation successful", zap.Int("userID", userID), zap.String("data", data))
     return nil
+
 }
 
-// CheckDuplicate checks if the request is a duplicate.
-func CheckDuplicate(db *sql.DB, userID int, data string) (bool, error) {
-    logs.Logger.Info("Checking for duplicate request", zap.Int("userID", userID), zap.String("data", data))
-
-    var count int
-    query := `SELECT COUNT(*) FROM requests WHERE user_id = ? AND data = ?`
-    err := db.QueryRow(query, userID, data).Scan(&count)
-    if err != nil {
-        logs.Logger.Error("Failed to check for duplicate request", zap.Error(err))
-        return false, err
-    }
-
-    if count > 0 {
-        logs.Logger.Warn("Duplicate request detected", zap.Int("userID", userID), zap.String("data", data))
-        return true, nil
-    }
-
-    logs.Logger.Info("No duplicate request found", zap.Int("userID", userID), zap.String("data", data))
-    return false, nil
-}
-
-// CheckUserQuota checks if the user has exceeded their request quota.
-func CheckUserQuota(db *sql.DB, userID int) error {
-    logs.Logger.Info("Checking user quota", zap.Int("userID", userID))
-
-    query := `SELECT quota FROM users WHERE id = ?`
-
-    var requestCount int
-    query = `SELECT COUNT(*) FROM requests WHERE user_id = ?`
-    err := db.QueryRow(query, userID).Scan(&requestCount)
-    if err != nil {
-        logs.Logger.Error("Failed to count user requests", zap.Error(err))
-        return err
-    }
-
-
-    logs.Logger.Info("User quota check passed", zap.Int("userID", userID), zap.Int("requestCount", requestCount))
-    return nil
-}
