@@ -4,6 +4,9 @@ import (
     "database/sql"
     "log"
     "net/http"
+    "github.com/gorilla/mux"
+    "github.com/swaggo/http-swagger"
+
 
     "data-processor-project/internal/api"
     "data-processor-project/internal/repository"
@@ -11,11 +14,24 @@ import (
     "data-processor-project/internal/redis"
     "data-processor-project/internal/logs"
     "data-processor-project/config"
-
+   
+    _ "data-processor-project/docs"
     _ "github.com/mattn/go-sqlite3"
 )
 
+// @title Data Processor API
+// @version 1.0
+// @description API For data processing
+// @termsOfService http://swagger.io/terms/
+// @contact.name Support team
+// @contact.email support@data-processor.com
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host localhost:8080
+// @BasePath /
 func main() {
+
+    r := mux.NewRouter()
 
     cfg := config.LoadConfig() 
 
@@ -45,13 +61,16 @@ func main() {
     userService := services.NewUserService(db)
 	requestService := services.NewRequestService(db, kafkaService, rdb)
 
-
     userAPI := api.NewUserAPI(userService)
     requestAPI := api.NewRequestAPI(requestService)
 
-    http.HandleFunc("/users", userAPI.CreateUser)
-    http.HandleFunc("/requests", requestAPI.AddRequest)
+
+    r.HandleFunc("/request", requestAPI.AddRequest).Methods("POST")
+    r.HandleFunc("/user", userAPI.CreateUser).Methods("POST")
+
+
+    r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
     log.Println("Server started at :8080")
-    http.ListenAndServe(":8080", nil)
+    http.ListenAndServe(":8080", r)
 }

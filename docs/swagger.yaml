@@ -1,0 +1,94 @@
+basePath: /
+definitions:
+  api.Request:
+    properties:
+      data:
+        type: string
+      id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  api.User:
+    properties:
+      monthly_data_limit:
+        type: integer
+      request_limit_per_minute:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@data-processor.com
+    name: Support team
+  description: API For data processing
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Data Processor API
+  version: "1.0"
+paths:
+  /requests:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new request to be processed
+      parameters:
+      - description: Request data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.Request'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Request processed successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request payload
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Add a new request
+      tags:
+      - requests
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Registers a user with specified data limits
+      parameters:
+      - description: User data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input data
+          schema:
+            type: string
+        "500":
+          description: Failed to register user
+          schema:
+            type: string
+      summary: Create a new user
+      tags:
+      - users
+swagger: "2.0"
