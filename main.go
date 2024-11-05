@@ -8,6 +8,7 @@ import (
     "data-processor-project/internal/api"
     "data-processor-project/internal/repository"
     "data-processor-project/internal/domain/services"
+    "data-processor-project/internal/redis"
     "data-processor-project/internal/logs"
 
     _ "github.com/mattn/go-sqlite3"
@@ -15,7 +16,6 @@ import (
 
 func main() {
 
-    // Initialize logger
     logs.InitLogger()
     defer logs.Sync() 
 
@@ -27,8 +27,20 @@ func main() {
 
     repository.Migrate(db)
 
+
+	kafkaService, err := services.NewKafkaService()
+	if err != nil {
+		log.Fatalf("Failed to create Kafka service: %v", err)
+	}
+
+    rdb, err := redis.InitRedis()
+    if err != nil {
+        log.Fatalf("Failed to connect to Redis: %v", err)
+    }
+    defer rdb.Close() 
+
     userService := services.NewUserService(db)
-    requestService := services.NewRequestService(db)
+	requestService := services.NewRequestService(db, kafkaService, rdb)
 
 
     userAPI := api.NewUserAPI(userService)
