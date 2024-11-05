@@ -17,6 +17,7 @@ func NewRequestAPI(service *services.RequestService) *RequestAPI {
 func (api *RequestAPI) AddRequest(w http.ResponseWriter, r *http.Request) {
     
     var request struct {
+        ID       int    `json:"id"`
         UserID   int    `json:"user_id"`
         Data     string `json:"data"`
     }
@@ -26,7 +27,7 @@ func (api *RequestAPI) AddRequest(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    if err := api.service.ProcessRequest(request.UserID,request.Data); err != nil {
+    if err := api.service.ProcessRequest(request.ID,request.UserID,request.Data); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
