@@ -11,12 +11,12 @@ import (
 
 
 
-func InitRedis() (*redis.Client, error){
+func InitRedis(RedisHost,RedisPort string) (*redis.Client, error){
 
 	var ctx = context.Background() 
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1" + ":" + "6379",                     
+		Addr:     RedisHost + ":" + RedisPort,                     
 		DB:       0,                             
 	})
 

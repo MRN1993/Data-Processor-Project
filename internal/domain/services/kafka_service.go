@@ -11,8 +11,8 @@ type KafkaService struct {
 	producer *kafka.Producer
 }
 
-func NewKafkaService() (*KafkaService, error) {
-	producer, err := my_kafka.NewKafkaProducer("localhost:9092")
+func NewKafkaService(KafkaHost string) (*KafkaService, error) {
+	producer, err := my_kafka.NewKafkaProducer(KafkaHost)
 	if err != nil {
 		logs.Logger.Error("Failed to create Kafka producer", zap.Error(err))
 		return nil, err
