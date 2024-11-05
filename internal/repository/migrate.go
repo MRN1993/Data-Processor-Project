@@ -20,7 +20,7 @@ func Migrate(db *sql.DB) {
 
     requestTable := `
     CREATE TABLE IF NOT EXISTS requests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_id INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
         data STRING NOT NULL,
         received_at DATETIME,
@@ -43,4 +43,3 @@ func Migrate(db *sql.DB) {
 
     logs.Logger.Info("Migration completed successfully")
 }
-
