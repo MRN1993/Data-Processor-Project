@@ -21,8 +21,8 @@ func RegisterRequest(db *sql.DB, requestID int, userID int, data string) error {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
 
-    query := `INSERT INTO requests (request_id, user_id, data, received_at, updated_at) VALUES (?, ?, ?, ?, ?)`
-    _, err := db.ExecContext(ctx, query, requestID, userID, data, time.Now(), time.Now())
+    query := `INSERT INTO requests (request_id, user_id, data, received_at) VALUES (?, ?, ?, ?)`
+    _, err := db.ExecContext(ctx, query, requestID, userID, data, time.Now())
     if err != nil {
         logs.Logger.Error("Failed to add request", zap.Error(err))
         return err
