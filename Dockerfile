@@ -1,33 +1,29 @@
-# Stage 1: Build
+# Stage 1: Build the Go application
 FROM golang:1.22.6 AS builder
 
-# Set working directory
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy go.mod and go.sum files
+# Copy the go.mod and go.sum files
 COPY go.mod go.sum ./
+
+# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
-# Copy the source code
+# Copy the source code into the container
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+# Build the Go app
+RUN CGO_ENABLED=1 GOOS=linux go build -o main .
 
-# Stage 2: Final stage
+# Stage 2: Create a minimal image
 FROM alpine:latest
 
-# Set working directory
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copy the binary from the builder stage
+# Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/main .
 
-# If needed, set environment variables
-# ENV PORT=8080
-
-# Expose the port if your application uses one
-# EXPOSE 8080
-
-# Run the application
+# Command to run the executable
 CMD ["./main"]
